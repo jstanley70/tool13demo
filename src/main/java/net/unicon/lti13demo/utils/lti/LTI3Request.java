@@ -34,7 +34,10 @@ import net.unicon.lti13demo.model.LtiUserEntity;
 import net.unicon.lti13demo.model.PlatformDeployment;
 import net.unicon.lti13demo.model.RSAKeyId;
 import net.unicon.lti13demo.service.LTIDataService;
-import net.unicon.lti13demo.utils.LtiStrings;
+import net.unicon.lti13demo.tokens.LtiStrings;
+import net.unicon.lti13demo.tokens.DeepLinkTokens;
+import net.unicon.lti13demo.tokens.RoleTokens;
+import net.unicon.lti13demo.tokens.MembershipTokens;
 import net.unicon.lti13demo.utils.oauth.OAuthUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -372,9 +375,9 @@ public class LTI3Request {
         ltiEmail = getStringFromLTIRequest(jws, LtiStrings.LTI_EMAIL);
         ltiName = getStringFromLTIRequest(jws, LtiStrings.LTI_NAME);
 
-        ltiRoles = getListFromLTIRequest(jws, LtiStrings.LTI_ROLES);
+        ltiRoles = getListFromLTIRequest(jws, RoleTokens.LTI_ROLES);
         userRoleNumber = makeUserRoleNum(ltiRoles);
-        ltiRoleScopeMentor = getListFromLTIRequest(jws, LtiStrings.LTI_ROLE_SCOPE_MENTOR);
+        ltiRoleScopeMentor = getListFromLTIRequest(jws, RoleTokens.LTI_ROLE_SCOPE_MENTOR);
 
         ltiResourceLink = getMapFromLTIRequest(jws, LtiStrings.LTI_LINK);
         ltiLinkId = getStringFromLTIRequestMap(ltiResourceLink, LtiStrings.LTI_LINK_ID);
@@ -437,16 +440,16 @@ public class LTI3Request {
 
         //LTI3 DEEP LINKING
 
-        deepLinkingSettings = getMapFromLTIRequest(jws, LtiStrings.DEEP_LINKING_SETTINGS);
-        deepLinkReturnUrl = getStringFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_RETURN_URL);
-        deepLinkAcceptTypes = getListFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_ACCEPT_TYPES);
-        deepLinkAcceptMediaTypes = getStringFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_ACCEPT_MEDIA_TYPES);
-        deepLinkAcceptPresentationDocumentTargets = getListFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_DOCUMENT_TARGETS);
-        deepLinkAcceptMultiple = getStringFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_ACCEPT_MULTIPLE);
-        deepLinkAutoCreate = getStringFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_AUTO_CREATE);
-        deepLinkTitle = getStringFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_TITLE);
-        deepLinkText = getStringFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_TEXT);
-        deepLinkData = getStringFromLTIRequestMap(deepLinkingSettings, LtiStrings.DEEP_LINK_DATA);
+        deepLinkingSettings = getMapFromLTIRequest(jws, DeepLinkTokens.DEEP_LINKING_SETTINGS);
+        deepLinkReturnUrl = getStringFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_RETURN_URL);
+        deepLinkAcceptTypes = getListFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_ACCEPT_TYPES);
+        deepLinkAcceptMediaTypes = getStringFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_ACCEPT_MEDIA_TYPES);
+        deepLinkAcceptPresentationDocumentTargets = getListFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_DOCUMENT_TARGETS);
+        deepLinkAcceptMultiple = getStringFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_ACCEPT_MULTIPLE);
+        deepLinkAutoCreate = getStringFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_AUTO_CREATE);
+        deepLinkTitle = getStringFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_TITLE);
+        deepLinkText = getStringFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_TEXT);
+        deepLinkData = getStringFromLTIRequestMap(deepLinkingSettings, DeepLinkTokens.DEEP_LINK_DATA);
 
 
         // A sample that shows how we can store some of this in the session
@@ -462,13 +465,13 @@ public class LTI3Request {
 
         // Surely we need a more elaborated code here based in the huge amount of roles avaliable.
         // In any case, this is for the session... we still have the full list of roles in the ltiRoles list
-        String normalizedRoleName = LtiStrings.LTI_ROLE_GENERAL;
+        String normalizedRoleName = RoleTokens.LTI_ROLE_GENERAL;
         if (isRoleAdministrator()) {
-            normalizedRoleName = LtiStrings.LTI_ROLE_ADMIN;
+            normalizedRoleName = RoleTokens.LTI_ROLE_ADMIN;
         } else if (isRoleInstructor()) {
-            normalizedRoleName = LtiStrings.LTI_ROLE_INSTRUCTOR;
+            normalizedRoleName = RoleTokens.LTI_ROLE_INSTRUCTOR;
         } else if (isRoleLearner()) {
-            normalizedRoleName = LtiStrings.LTI_ROLE_LEARNER;
+            normalizedRoleName = RoleTokens.LTI_ROLE_LEARNER;
         }
         session.setAttribute(LtiStrings.LTI_SESSION_USER_ROLE, normalizedRoleName);
 
@@ -790,7 +793,7 @@ public class LTI3Request {
     }
 
     public boolean isRoleLearner() {
-        return (ltiRoles != null && ltiRoles.contains(LtiStrings.LTI_ROLE_MEMBERSHIP_LEARNER));
+        return (ltiRoles != null && ltiRoles.contains(MembershipTokens.LTI_ROLE_MEMBERSHIP_LEARNER));
     }
 
 
@@ -801,9 +804,9 @@ public class LTI3Request {
     public int makeUserRoleNum(List<String> rawUserRoles) {
         int roleNum = 0;
         if (rawUserRoles != null) {
-            if (rawUserRoles.contains(LtiStrings.LTI_ROLE_MEMBERSHIP_ADMIN)) {
+            if (rawUserRoles.contains(MembershipTokens.LTI_ROLE_MEMBERSHIP_ADMIN)) {
                 roleNum = 2;
-            } else if (rawUserRoles.contains(LtiStrings.LTI_ROLE_MEMBERSHIP_INSTRUCTOR)) {
+            } else if (rawUserRoles.contains(MembershipTokens.LTI_ROLE_MEMBERSHIP_INSTRUCTOR)) {
                 roleNum = 1;
             }
         }

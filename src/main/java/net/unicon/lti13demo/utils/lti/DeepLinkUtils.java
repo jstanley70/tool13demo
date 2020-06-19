@@ -22,7 +22,7 @@ import net.unicon.lti13demo.model.PlatformDeployment;
 import net.unicon.lti13demo.model.RSAKeyEntity;
 import net.unicon.lti13demo.model.RSAKeyId;
 import net.unicon.lti13demo.service.LTIDataService;
-import net.unicon.lti13demo.utils.LtiStrings;
+import net.unicon.lti13demo.tokens.LtiStrings;
 import net.unicon.lti13demo.utils.oauth.OAuthUtils;
 import org.apache.commons.lang3.time.DateUtils;
 

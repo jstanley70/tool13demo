@@ -85,7 +85,6 @@ public class AdvantageConnectorHelper {
             ResponseEntity<String> reportPostResponse = restTemplate.
                     postForEntity(POST_TOKEN_URL, request, String.class);
             
-            
             if (reportPostResponse != null) {
                 HttpStatus status = reportPostResponse.getStatusCode();
                 if (status.is2xxSuccessful()) {

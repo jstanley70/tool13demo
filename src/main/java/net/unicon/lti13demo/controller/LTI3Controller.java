@@ -14,15 +14,12 @@
  */
 package net.unicon.lti13demo.controller;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.SignatureException;
-import net.unicon.lti13demo.model.LtiLinkEntity;
-import net.unicon.lti13demo.repository.LtiContextRepository;
-import net.unicon.lti13demo.repository.LtiLinkRepository;
-import net.unicon.lti13demo.service.LTIJWTService;
-import net.unicon.lti13demo.utils.LtiStrings;
-import net.unicon.lti13demo.utils.lti.LTI3Request;
+import java.security.Principal;
+import java.util.Enumeration;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +29,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import javax.servlet.http.HttpServletRequest;
-import java.security.Principal;
-import java.util.Enumeration;
-import java.util.List;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.SignatureException;
+import net.unicon.lti13demo.model.LtiLinkEntity;
+import net.unicon.lti13demo.repository.LtiContextRepository;
+import net.unicon.lti13demo.repository.LtiLinkRepository;
+import net.unicon.lti13demo.service.LTIJWTService;
+import net.unicon.lti13demo.tokens.LtiStrings;
+import net.unicon.lti13demo.utils.lti.LTI3Request;
 
 /**
  * This LTI 3 redirect controller will retrieve the LTI3 requests and redirect them to the right page.
