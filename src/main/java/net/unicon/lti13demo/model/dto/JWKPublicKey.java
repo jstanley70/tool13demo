@@ -12,19 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.unicon.lti13demo;
+package net.unicon.lti13demo.model.dto;
 
-import org.junit.Test;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@ComponentScan(basePackages = {"net.unicon.lti13demo"}) 
-@EnableJpaRepositories(basePackages={"net.unicon.lti13demo"})
-public class Lti13demoApplicationTests {
-
-	@Test
-	public void contextLoads() {
-	}
-
+@Data
+@NoArgsConstructor
+public class JWKPublicKey {
+	
+	String kty;
+	String n;
+	String e;
+	String kid;
+	String alg;
+	String use;
 }
 

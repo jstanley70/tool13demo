@@ -14,10 +14,28 @@
  */
 package net.unicon.lti13demo.service;
 
+import java.io.IOException;
+import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.security.Key;
+import java.security.PublicKey;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.AsymmetricJWK;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwsHeader;
@@ -28,24 +46,8 @@ import io.jsonwebtoken.SigningKeyResolverAdapter;
 import net.unicon.lti13demo.model.PlatformDeployment;
 import net.unicon.lti13demo.model.RSAKeyEntity;
 import net.unicon.lti13demo.model.RSAKeyId;
-import net.unicon.lti13demo.model.dto.LoginInitiationDTO;
 import net.unicon.lti13demo.utils.oauth.OAuthUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.net.URL;
-import java.security.GeneralSecurityException;
-import java.security.Key;
-import java.security.PublicKey;
-import java.text.ParseException;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
+import net.unicon.lti13demo.utils.oauth.OAuthUtils2;
 
 /**
  * This manages all the data processing for the LTIRequest (and for LTI in general)
@@ -58,6 +60,9 @@ public class LTIJWTService {
 
     @Autowired
     LTIDataService ltiDataService;
+    
+    @Value("${lti.tool.iss:unicon.lti13demo}")
+    String ltiToolIss;
 
     String error;
 
@@ -163,9 +168,9 @@ public class LTIJWTService {
         Date date = new Date();
         Optional<RSAKeyEntity> rsaKeyEntityOptional = ltiDataService.getRepos().rsaKeys.findById(new RSAKeyId(platformDeployment.getToolKid(),true));
         if (rsaKeyEntityOptional.isPresent()) {
-            Key toolPrivateKey = OAuthUtils.loadPrivateKey(rsaKeyEntityOptional.get().getPrivateKey());
+            Key toolPrivateKey = OAuthUtils2.loadPrivateKey(rsaKeyEntityOptional.get().getPrivateKey());
             String state = Jwts.builder()
-                    .setIssuer("unicon.lti13demo")  //This is our own identifier, to know that we are the issuer.
+                    .setIssuer(ltiToolIss)  //This is our own identifier, to know that we are the issuer.
                     .setSubject(platformDeployment.getClientId()) // The clientId
                     .setAudience(platformDeployment.getoAuth2TokenUrl())  //We send here the authToken url.
                     .setExpiration(DateUtils.addSeconds(date, 3600)) //a java.util.Date

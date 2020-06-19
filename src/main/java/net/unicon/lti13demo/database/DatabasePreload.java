@@ -23,6 +23,9 @@ import net.unicon.lti13demo.model.RSAKeyEntity;
 import net.unicon.lti13demo.repository.LtiUserRepository;
 import net.unicon.lti13demo.repository.PlatformDeploymentRepository;
 import net.unicon.lti13demo.repository.RSAKeyRepository;
+import net.unicon.lti13demo.utils.oauth.OAuthUtils2;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -67,17 +73,12 @@ public class DatabasePreload {
     @Autowired
     LtiUserEntityResourceService ltiUserEntityResourceService;
 
-    @Value("${oicd.privatekey}")
-    private String ownPrivateKey;
-    @Value("${oicd.publickey}")
-    private String ownPublicKey;
-
     @Value("${initial.lti.data.location}")
     String LTI_DATA_DIRECTORY;
 
 
     @PostConstruct
-    public void init() throws IOException {
+    public void init() throws IOException, NoSuchAlgorithmException, NoSuchProviderException {
 
         if (platformDeploymentRepository.count() > 0) {
             // done, no preloading
@@ -87,19 +88,7 @@ public class DatabasePreload {
         }
     }
 
-    private String usersLocation() {
-        return LTI_DATA_DIRECTORY + "users";
-    }
-
-    private String platformDeploymentLocation() {
-        return LTI_DATA_DIRECTORY + "platform_deployment";
-    }
-
-    private String rsaKeysLocation() {
-        return LTI_DATA_DIRECTORY + "rsa_keys";
-    }
-
-    public void buildDataFromFiles() throws JsonParseException, JsonMappingException, IOException {
+    public void buildDataFromFiles() throws JsonParseException, JsonMappingException, IOException, NoSuchAlgorithmException, NoSuchProviderException {
         Set<PlatformDeployment> deploymentPlatforms = platformDeploymentResources.getResources(PlatformDeployment.class);
         for(PlatformDeployment deploymentPlatform:deploymentPlatforms) {
             log.info("Storing: " + deploymentPlatform.getKeyId() + " : " + deploymentPlatform.getIss());
@@ -113,25 +102,20 @@ public class DatabasePreload {
 
         Set<RSAKeyEntity> rsaKeys = rsaKeyEntityResourceService.getResources(RSAKeyEntity.class);
         for(RSAKeyEntity rsaKey:rsaKeys) {
+        	if(rsaKey.getKid().getTool() && StringUtils.isBlank(rsaKey.getPrivateKey()) && StringUtils.isBlank(rsaKey.getPublicKey())) {
+        		List<PlatformDeployment> platformDeployments = platformDeploymentRepository.findByToolKid(rsaKey.getKid().getKid());
+        		if(platformDeployments.size() == 1) {
+        			
+        			rsaKey = OAuthUtils2.buildKeyEntity(platformDeployments.get(0).getToolKid());
+        			
+        			log.debug("RSAKEY: {} ahd privateKey: {} ", rsaKey.getKid().getKid(), rsaKey.getPrivateKey());
+        		}
+        	}
+        	if(rsaKey.getKid().getKid().equals("OWNKEY")) {
+        		rsaKey = OAuthUtils2.buildKeyEntity("OWNKEY");
+        	}
             rsaKeyRepository.save(rsaKey);
         }
-
     }
 
-
-    public String getOwnPrivateKey() {
-        return ownPrivateKey;
-    }
-
-    public void setOwnPrivateKey(String ownPrivateKey) {
-        this.ownPrivateKey = ownPrivateKey;
-    }
-
-    public String getOwnPublicKey() {
-        return ownPublicKey;
-    }
-
-    public void setOwnPublicKey(String ownPublicKey) {
-        this.ownPublicKey = ownPublicKey;
-    }
 }

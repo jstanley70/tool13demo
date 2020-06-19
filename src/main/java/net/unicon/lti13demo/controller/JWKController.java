@@ -14,16 +14,36 @@
  */
 package net.unicon.lti13demo.controller;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpServletRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.Data;
+import net.unicon.lti13demo.model.RSAKeyEntity;
+import net.unicon.lti13demo.model.RSAKeyId;
+import net.unicon.lti13demo.model.dto.JWKPublicKey;
+import net.unicon.lti13demo.repository.RSAKeyRepository;
+import net.unicon.lti13demo.utils.oauth.OAuthUtils2;
 
 /**
  * Serving the public key of the tool.
@@ -34,7 +54,9 @@ import javax.servlet.http.HttpServletRequest;
 public class JWKController {
 
     static final Logger log = LoggerFactory.getLogger(JWKController.class);
-
+    @Autowired
+    RSAKeyRepository rsaRepo;
+    
     @RequestMapping(value = "/jwk",method = RequestMethod.GET, produces = "application/json;")
     @ResponseBody
     public String jkw(HttpServletRequest req,  Model model) {
@@ -50,6 +72,40 @@ public class JWKController {
                 "\"use\": \"sig\"}]}";
 
 
+    }
+
+    @RequestMapping(value = {"/{kid}", ""}, method = RequestMethod.GET, produces = "application/json;")
+    @ResponseBody
+    public PublicKeys jkws(@PathVariable(name="kid", required=false) String kid, HttpServletRequest req,  Model model) throws JsonMappingException, JsonProcessingException, GeneralSecurityException, IOException {
+    	ObjectMapper mapper = new ObjectMapper();
+        log.info("Someone is calling the jwk endpoint!");
+        log.info(req.getQueryString());
+        PublicKeys keys = new PublicKeys();
+        if(StringUtils.isNotBlank(kid)) {
+        RSAKeyId id = new RSAKeyId(kid, true);
+        
+        	Optional<RSAKeyEntity> rsaKey = rsaRepo.findById(id);
+        	if(rsaKey.isPresent()) {
+        		RSAKeyEntity rsaKeyEntity = rsaKey.get();
+        		keys.keys.add(mapper.readValue(OAuthUtils2.getPublicKeyJson(rsaKeyEntity), JWKPublicKey.class));
+        		return keys;
+        	}
+        }
+        List<RSAKeyEntity> entities = rsaRepo.findAll();
+        entities.stream().filter(et -> et.getKid().getTool() && StringUtils.isNotBlank(et.getPublicKey()))
+        .forEach(et -> {
+			try {
+				keys.keys.add(mapper.readValue(OAuthUtils2.getPublicKeyJson(et), JWKPublicKey.class));
+			} catch (GeneralSecurityException | IOException e) {
+				log.error(String.format("Unable to generate keys for entity: %s", et), e);
+			}
+		});
+        return keys;
+    }
+    
+    @Data
+    public class PublicKeys {
+    	List<JWKPublicKey> keys = new ArrayList<>();
     }
 
 }

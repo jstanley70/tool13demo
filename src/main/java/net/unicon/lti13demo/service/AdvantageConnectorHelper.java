@@ -14,13 +14,15 @@
  */
 package net.unicon.lti13demo.service;
 
-import net.unicon.lti13demo.exceptions.ConnectionException;
-import net.unicon.lti13demo.exceptions.helper.ExceptionMessageGenerator;
-import net.unicon.lti13demo.model.PlatformDeployment;
-import net.unicon.lti13demo.model.oauth2.Token;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +37,12 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.security.GeneralSecurityException;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import net.unicon.lti13demo.exceptions.ConnectionException;
+import net.unicon.lti13demo.exceptions.helper.ExceptionMessageGenerator;
+import net.unicon.lti13demo.model.PlatformDeployment;
+import net.unicon.lti13demo.model.oauth2.Token;
 
 @Component
 public class AdvantageConnectorHelper {
@@ -74,19 +77,22 @@ public class AdvantageConnectorHelper {
         Token token = null;
         try {
             RestTemplate restTemplate = createRestTemplate();
+            ObjectMapper mapper = new ObjectMapper();
             // We need an specific request for the token.
             HttpEntity request = createTokenRequest(scope, platformDeployment);
             final String POST_TOKEN_URL = platformDeployment.getoAuth2TokenUrl();
             log.debug("POST_TOKEN_URL -  "+ POST_TOKEN_URL);
-            ResponseEntity<Token> reportPostResponse = restTemplate.
-                    postForEntity(POST_TOKEN_URL, request, Token.class);
+            ResponseEntity<String> reportPostResponse = restTemplate.
+                    postForEntity(POST_TOKEN_URL, request, String.class);
+            
+            
             if (reportPostResponse != null) {
                 HttpStatus status = reportPostResponse.getStatusCode();
                 if (status.is2xxSuccessful()) {
-                    token = reportPostResponse.getBody();
+                    token = mapper.readValue(reportPostResponse.getBody(), Token.class);
                 } else {
-                    String exceptionMsg = "Can get the token";
-                    log.error(exceptionMsg);
+                    String exceptionMsg = "Can not get the token, http status: {}, response body: {}";
+                    log.error(exceptionMsg, status, reportPostResponse.getBody());
                     throw new ConnectionException(exceptionMsg);
                 }
             } else {
@@ -105,13 +111,20 @@ public class AdvantageConnectorHelper {
     public HttpEntity createTokenRequest(String scope, PlatformDeployment platformDeployment) throws GeneralSecurityException, IOException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        List<MediaType> acceptableMediaTypes = new ArrayList<>();
+        acceptableMediaTypes.add(MediaType.APPLICATION_JSON);
+        acceptableMediaTypes.add(MediaType.TEXT_HTML);
+        
+        headers.setAccept(acceptableMediaTypes);
         JSONObject parameterJson = new JSONObject();
         // The grant type is client credentials always
         parameterJson.put("grant_type", "client_credentials");
         // This is standard too
         parameterJson.put("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer");
         //This is special (see the generateTokenRequestJWT method for more comments)
-        parameterJson.put("client_assertion", ltijwtService.generateTokenRequestJWT(platformDeployment));
+        String jwtToken = ltijwtService.generateTokenRequestJWT(platformDeployment);
+        log.debug("jwt string createTokenRequest:", jwtToken);
+        parameterJson.put("client_assertion", jwtToken);
         //We need to pass the scope of the token, meaning, the service we want to allow with this token.
         parameterJson.put("scope", scope);
         HttpEntity request = new HttpEntity<>(parameterJson.toString(), headers);
