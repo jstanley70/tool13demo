@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -34,11 +35,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import net.unicon.lti13demo.client.MessageConverterHtml;
+import net.unicon.lti13demo.client.RestTemplateResponseErrorHandler;
 import net.unicon.lti13demo.exceptions.ConnectionException;
 import net.unicon.lti13demo.exceptions.helper.ExceptionMessageGenerator;
 import net.unicon.lti13demo.model.PlatformDeployment;
@@ -77,21 +80,20 @@ public class AdvantageConnectorHelper {
         Token token = null;
         try {
             RestTemplate restTemplate = createRestTemplate();
-            ObjectMapper mapper = new ObjectMapper();
             // We need an specific request for the token.
             HttpEntity request = createTokenRequest(scope, platformDeployment);
             final String POST_TOKEN_URL = platformDeployment.getoAuth2TokenUrl();
             log.debug("POST_TOKEN_URL -  "+ POST_TOKEN_URL);
-            ResponseEntity<String> reportPostResponse = restTemplate.
-                    postForEntity(POST_TOKEN_URL, request, String.class);
+            ResponseEntity<Token> reportPostResponse = restTemplate.
+                    postForEntity(POST_TOKEN_URL, request, Token.class);
             
             if (reportPostResponse != null) {
                 HttpStatus status = reportPostResponse.getStatusCode();
                 if (status.is2xxSuccessful()) {
-                    token = mapper.readValue(reportPostResponse.getBody(), Token.class);
+                    token = reportPostResponse.getBody();
                 } else {
-                    String exceptionMsg = "Can not get the token, http status: {}, response body: {}";
-                    log.error(exceptionMsg, status, reportPostResponse.getBody());
+                    String exceptionMsg = "Can not get the token, http status: %s";
+                    log.error(String.format(exceptionMsg, status.toString()));
                     throw new ConnectionException(exceptionMsg);
                 }
             } else {
@@ -110,11 +112,6 @@ public class AdvantageConnectorHelper {
     public HttpEntity createTokenRequest(String scope, PlatformDeployment platformDeployment) throws GeneralSecurityException, IOException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        List<MediaType> acceptableMediaTypes = new ArrayList<>();
-        acceptableMediaTypes.add(MediaType.APPLICATION_JSON);
-        acceptableMediaTypes.add(MediaType.TEXT_HTML);
-        
-        headers.setAccept(acceptableMediaTypes);
         JSONObject parameterJson = new JSONObject();
         // The grant type is client credentials always
         parameterJson.put("grant_type", "client_credentials");
@@ -133,6 +130,16 @@ public class AdvantageConnectorHelper {
     public RestTemplate createRestTemplate() {
         RestTemplate restTemplate = new RestTemplate(
                 new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
+        List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_JSON));
+        messageConverters.add(converter);
+        
+        MessageConverterHtml errorConverter = new MessageConverterHtml();
+        messageConverters.add(errorConverter);
+        restTemplate.setMessageConverters(messageConverters);
+        
+        restTemplate.setErrorHandler(new RestTemplateResponseErrorHandler());
         return restTemplate;
     }
 

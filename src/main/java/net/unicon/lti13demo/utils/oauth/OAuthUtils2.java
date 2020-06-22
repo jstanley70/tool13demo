@@ -49,13 +49,18 @@ public class OAuthUtils2 {
 	    static final String PEM_PRIVATE_START = "-----BEGIN PRIVATE KEY-----";
 	    static final String PEM_PRIVATE_END = "-----END PRIVATE KEY-----";
 	    
-	    static final String PUBLIC_START = "-----BEGIN PUBLIC KEY-----";
-	    static final String PUBLIC_END = "-----END PUBLIC KEY-----";
+	    static final String PEM_PUBLIC_START = "-----BEGIN PUBLIC KEY-----";
+	    static final String PEM_PUBLIC_END = "-----END PUBLIC KEY-----";
 
 	    // PKCS#1 format
 	    static final String PEM_RSA_PRIVATE_START = "-----BEGIN RSA PRIVATE KEY-----";
 	    static final String PEM_RSA_PRIVATE_END = "-----END RSA PRIVATE KEY-----";
+	    static final String PEM_RSA_PUBLIC_START = "-----BEGIN RSA PUBLIC KEY-----";
+	    static final String PEM_RSA_PUBLIC_END = "-----END RSA PUBLIC KEY-----";
 
+	    static final String PKCS_8_FORMATTED = "PKCS#8";
+	    static final String PKCS_1_FORMATTED = "PKCS#1";
+	    static final String X_509_FORMATTED = "X.509";
 	    //This is added to deal with the PCKS#1 key that IMS is providing in their test platform.
 
 	    private OAuthUtils2() {
@@ -63,7 +68,7 @@ public class OAuthUtils2 {
 	    }
 
 	    public static RSAPublicKey loadPublicKey(String key) throws GeneralSecurityException {
-	        String publicKeyContent = key.replaceAll("\\n", "").replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "");
+	        String publicKeyContent = cleanPublicKey(key);
 	        KeyFactory kf = KeyFactory.getInstance("RSA");
 	        X509EncodedKeySpec keySpecX509 = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyContent));
 	        RSAPublicKey pubKey = (RSAPublicKey) kf.generatePublic(keySpecX509);
@@ -74,16 +79,30 @@ public class OAuthUtils2 {
 	    	return PrivateKeyReader.loadPrivateKey(privatePEMKey);
 	    }
 	    
-	    public static RSAKeyEntity buildKeyEntity(String toolId) throws NoSuchAlgorithmException, NoSuchProviderException {
+	    public static RSAKeyEntity buildKeyEntity(String toolId) throws Exception {
 	    	KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
 			kpg.initialize(2048);
 			KeyPair kp = kpg.generateKeyPair();
 			
 			Key pub = kp.getPublic();
 			Key pvt = kp.getPrivate();
-
-	    	String privateKey = PEM_PRIVATE_START + Base64.getEncoder().encodeToString(pvt.getEncoded()) + PEM_PRIVATE_END;
-	    	String publicKey = PUBLIC_START + Base64.getEncoder().encodeToString(pub.getEncoded())  + PUBLIC_END;
+			
+			System.err.println("Private key format: " + pvt.getFormat());
+			System.err.println("Public key format: " + pub.getFormat());
+			
+			String privateKey = "";
+			if(pvt.getFormat().equals(PKCS_8_FORMATTED)) {
+				privateKey = PEM_PRIVATE_START + Base64.getEncoder().encodeToString(pvt.getEncoded()) + PEM_PRIVATE_END;
+			} else if(pvt.getFormat().equals(PKCS_1_FORMATTED)) {
+				privateKey = PEM_PRIVATE_START + Base64.getEncoder().encodeToString(pvt.getEncoded()) + PEM_PRIVATE_END;
+			} else {
+				throw new Exception(String.format("Private key for tool: %s can not be created sucessfully, format unrecognized, %s", toolId, pvt.getFormat()));
+			}
+			
+			String publicKey = ""; 
+			if(X_509_FORMATTED.equals(pub.getFormat())) {
+	    	  publicKey = PEM_PUBLIC_START + Base64.getEncoder().encodeToString(pub.getEncoded())  + PEM_PUBLIC_END;
+			}
 	    	return  new  RSAKeyEntity( toolId, true, publicKey, privateKey);
 	    }
 	    
@@ -121,12 +140,14 @@ public class OAuthUtils2 {
 	    public static String getPublicKeyPem(String json) throws ParseException, JOSEException {
 	    	RSAKey rsaKey = RSAKey.parse(json);
 	    	RSAPublicKey pub = rsaKey.toRSAPublicKey();
-	    	return PUBLIC_START + Base64.getEncoder().encodeToString(pub.getEncoded())  + PUBLIC_END;
+	    	return PEM_PUBLIC_START + Base64.getEncoder().encodeToString(pub.getEncoded())  + PEM_PUBLIC_END;
 	    }
 	    
 	    public static String cleanPublicKey(String publicKey) {
-	    	publicKey = publicKey.replace(PUBLIC_START, "");
-	    	publicKey = publicKey.replace(PUBLIC_END, "");
+	    	publicKey = publicKey.replace(PEM_PUBLIC_START, "");
+	    	publicKey = publicKey.replace(PEM_PUBLIC_END, "");
+	    	publicKey = publicKey.replace(PEM_RSA_PUBLIC_START, "");
+	    	publicKey = publicKey.replace(PEM_RSA_PUBLIC_END, "");
 	    	return publicKey.replaceAll("\\s", "");
 	    }
 	    

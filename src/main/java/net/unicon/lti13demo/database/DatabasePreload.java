@@ -78,7 +78,7 @@ public class DatabasePreload {
 
 
     @PostConstruct
-    public void init() throws IOException, NoSuchAlgorithmException, NoSuchProviderException {
+    public void init() throws Exception {
 
         if (platformDeploymentRepository.count() > 0) {
             // done, no preloading
@@ -88,7 +88,7 @@ public class DatabasePreload {
         }
     }
 
-    public void buildDataFromFiles() throws JsonParseException, JsonMappingException, IOException, NoSuchAlgorithmException, NoSuchProviderException {
+    public void buildDataFromFiles() throws Exception {
         Set<PlatformDeployment> deploymentPlatforms = platformDeploymentResources.getResources(PlatformDeployment.class);
         for(PlatformDeployment deploymentPlatform:deploymentPlatforms) {
             log.info("Storing: " + deploymentPlatform.getKeyId() + " : " + deploymentPlatform.getIss());
@@ -108,7 +108,7 @@ public class DatabasePreload {
         			
         			rsaKey = OAuthUtils2.buildKeyEntity(platformDeployments.get(0).getToolKid());
         			
-        			log.debug("RSAKEY: {} ahd privateKey: {} ", rsaKey.getKid().getKid(), rsaKey.getPrivateKey());
+        			log.debug("RSAKEY: {} ", rsaKey.getKid().getKid());
         		}
         	}
         	if(rsaKey.getKid().getKid().equals("OWNKEY")) {

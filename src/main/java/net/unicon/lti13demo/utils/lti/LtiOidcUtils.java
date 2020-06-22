@@ -14,6 +14,17 @@
  */
 package net.unicon.lti13demo.utils.lti;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.Key;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
+
+import org.apache.commons.lang3.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import net.unicon.lti13demo.model.PlatformDeployment;
@@ -21,17 +32,7 @@ import net.unicon.lti13demo.model.RSAKeyEntity;
 import net.unicon.lti13demo.model.RSAKeyId;
 import net.unicon.lti13demo.model.dto.LoginInitiationDTO;
 import net.unicon.lti13demo.service.LTIDataService;
-import net.unicon.lti13demo.utils.oauth.OAuthUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.Key;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
+import net.unicon.lti13demo.utils.oauth.OAuthUtils2;
 
 public class LtiOidcUtils {
 
@@ -50,7 +51,7 @@ public class LtiOidcUtils {
         Date date = new Date();
         Optional<RSAKeyEntity> rsaKeyEntityOptional = ltiDataService.getRepos().rsaKeys.findById(new RSAKeyId("OWNKEY",true));
         if (rsaKeyEntityOptional.isPresent()) {
-            Key issPrivateKey = OAuthUtils.loadPrivateKey(rsaKeyEntityOptional.get().getPrivateKey());
+            Key issPrivateKey = OAuthUtils2.loadPrivateKey(rsaKeyEntityOptional.get().getPrivateKey());
             String state = Jwts.builder()
                     .setHeaderParam("kid", "OWNKEY")  // The key id used to sign this
                     .setIssuer("ltiStarter")  //This is our own identifier, to know that we are the issuer.

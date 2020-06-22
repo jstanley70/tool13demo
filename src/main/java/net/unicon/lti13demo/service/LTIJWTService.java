@@ -88,7 +88,7 @@ public class LTIJWTService {
                     String toolPublicKeyString;
                     if (rsaKeyEntity.isPresent()) {
                         toolPublicKeyString = rsaKeyEntity.get().getPublicKey();
-                        toolPublicKey = OAuthUtils.loadPublicKey(toolPublicKeyString);
+                        toolPublicKey = OAuthUtils2.loadPublicKey(toolPublicKeyString);
                     } else {
                         throw new SignatureException("Error validating the state. Error getting the tool public key");
                     }
@@ -141,7 +141,7 @@ public class LTIJWTService {
                     } else { // If not, we get the key stored in our configuration
                         Optional<RSAKeyEntity> rsaKey = ltiDataService.getRepos().rsaKeys.findById(new RSAKeyId(platformDeployment.getPlatformKid(), false));
                         if (rsaKey.isPresent()) {
-                           return OAuthUtils.loadPublicKey(rsaKey.get().getPublicKey());
+                           return OAuthUtils2.loadPublicKey(rsaKey.get().getPublicKey());
                         } else {
                            log.error("Error retrieving the tool public key");
                            return null;

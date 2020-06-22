@@ -14,18 +14,6 @@
  */
 package net.unicon.lti13demo.utils.lti;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import net.unicon.lti13demo.model.PlatformDeployment;
-import net.unicon.lti13demo.model.RSAKeyEntity;
-import net.unicon.lti13demo.model.RSAKeyId;
-import net.unicon.lti13demo.service.LTIDataService;
-import net.unicon.lti13demo.tokens.LtiStrings;
-import net.unicon.lti13demo.utils.oauth.OAuthUtils;
-import org.apache.commons.lang3.time.DateUtils;
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -35,6 +23,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.apache.commons.lang3.time.DateUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import net.unicon.lti13demo.model.PlatformDeployment;
+import net.unicon.lti13demo.model.RSAKeyEntity;
+import net.unicon.lti13demo.model.RSAKeyId;
+import net.unicon.lti13demo.service.LTIDataService;
+import net.unicon.lti13demo.tokens.LtiStrings;
+import net.unicon.lti13demo.utils.oauth.OAuthUtils2;
 
 public class DeepLinkUtils {
 
@@ -50,12 +52,12 @@ public class DeepLinkUtils {
         Date date = new Date();
         Optional<RSAKeyEntity> rsaKeyEntityOptional = ltiDataService.getRepos().rsaKeys.findById(new RSAKeyId(platformDeployment.getToolKid(),true));
         if (rsaKeyEntityOptional.isPresent()) {
-            Key toolPrivateKey = OAuthUtils.loadPrivateKey(rsaKeyEntityOptional.get().getPrivateKey());
+            Key toolPrivateKey = OAuthUtils2.loadPrivateKey(rsaKeyEntityOptional.get().getPrivateKey());
 
         // JWT 1:  Empty list of JSON
             String jwt1 = Jwts.builder()
                     .setHeaderParam("typ","JWT")
-                    .setHeaderParam("kid", "000000000000000001")
+                    .setHeaderParam("kid", platformDeployment.getToolKid())
                     .setHeaderParam("alg", "RS256")
                     .setIssuer(platformDeployment.getClientId())  //Client ID
                     .setAudience(lti3Request.getIss())
@@ -79,7 +81,7 @@ public class DeepLinkUtils {
             List<Map<String,Object>> oneDeepLink = createOneDeepLink(localUrl);
             String jwt2 = Jwts.builder()
                     .setHeaderParam("typ","JWT")
-                    .setHeaderParam("kid", "000000000000000001")
+                    .setHeaderParam("kid", platformDeployment.getToolKid())
                     .setHeaderParam("alg", "RS256")
                     .setIssuer(platformDeployment.getClientId())  //Client ID
                     .setAudience(lti3Request.getIss())
@@ -103,7 +105,7 @@ public class DeepLinkUtils {
             List<Map<String,Object>> oneDeepLinkNoLti = createOneDeepLinkNoLti(localUrl);
             String jwt2b = Jwts.builder()
                     .setHeaderParam("typ","JWT")
-                    .setHeaderParam("kid", "000000000000000001")
+                    .setHeaderParam("kid", platformDeployment.getToolKid())
                     .setHeaderParam("alg", "RS256")
                     .setIssuer(platformDeployment.getClientId())  //Client ID
                     .setAudience(lti3Request.getIss())
@@ -126,7 +128,7 @@ public class DeepLinkUtils {
             List<Map<String,Object>> multipleDeepLink = createMultipleDeepLink(localUrl);
             String jwt3 = Jwts.builder()
                     .setHeaderParam("typ","JWT")
-                    .setHeaderParam("kid", "000000000000000001")
+                    .setHeaderParam("kid", platformDeployment.getToolKid())
                     .setHeaderParam("alg", "RS256")
                     .setIssuer(platformDeployment.getClientId())  //This is our own identifier, to know that we are the issuer.
                     .setAudience(lti3Request.getIss())
@@ -151,7 +153,7 @@ public class DeepLinkUtils {
             List<Map<String,Object>> multipleDeepLinkOnlyLti = createMultipleDeepLinkOnlyLti(localUrl);
             String jwt3b = Jwts.builder()
                     .setHeaderParam("typ","JWT")
-                    .setHeaderParam("kid", "000000000000000001")
+                    .setHeaderParam("kid", platformDeployment.getToolKid())
                     .setHeaderParam("alg", "RS256")
                     .setIssuer(platformDeployment.getClientId())  //This is our own identifier, to know that we are the issuer.
                     .setAudience(lti3Request.getIss())

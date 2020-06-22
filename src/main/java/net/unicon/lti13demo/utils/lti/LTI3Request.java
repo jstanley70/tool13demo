@@ -14,11 +14,37 @@
  */
 package net.unicon.lti13demo.utils.lti;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.Key;
+import java.security.PublicKey;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.thymeleaf.util.ListUtils;
+
 import com.google.common.hash.Hashing;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.AsymmetricJWK;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwsHeader;
@@ -34,35 +60,11 @@ import net.unicon.lti13demo.model.LtiUserEntity;
 import net.unicon.lti13demo.model.PlatformDeployment;
 import net.unicon.lti13demo.model.RSAKeyId;
 import net.unicon.lti13demo.service.LTIDataService;
-import net.unicon.lti13demo.tokens.LtiStrings;
 import net.unicon.lti13demo.tokens.DeepLinkTokens;
-import net.unicon.lti13demo.tokens.RoleTokens;
+import net.unicon.lti13demo.tokens.LtiStrings;
 import net.unicon.lti13demo.tokens.MembershipTokens;
-import net.unicon.lti13demo.utils.oauth.OAuthUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.thymeleaf.util.ListUtils;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.Key;
-import java.security.PublicKey;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import net.unicon.lti13demo.tokens.RoleTokens;
+import net.unicon.lti13demo.utils.oauth.OAuthUtils2;
 
 /**
  * LTI3 Request object holds all the details for a valid LTI3 request
@@ -282,7 +284,7 @@ public class LTI3Request {
                             return null;
                         }
                     } else {
-                        return OAuthUtils.loadPublicKey(ltiDataService.getRepos().rsaKeys.findById(new RSAKeyId(platformDeployment.getPlatformKid(), false)).get().getPublicKey());
+                        return OAuthUtils2.loadPublicKey(ltiDataService.getRepos().rsaKeys.findById(new RSAKeyId(platformDeployment.getPlatformKid(), false)).get().getPublicKey());
                     }
                 } catch (GeneralSecurityException ex) {
                     log.error("Error generating the tool public key", ex);

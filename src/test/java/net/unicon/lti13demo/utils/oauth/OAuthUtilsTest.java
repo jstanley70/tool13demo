@@ -39,7 +39,7 @@ import net.unicon.lti13demo.model.dto.JWKPublicKey;
 public class OAuthUtilsTest {
 
 	@Test
-	public void loadKeysTest() throws GeneralSecurityException, IOException {
+	public void loadKeysTest() throws Exception {
 		RSAKeyEntity entity = buildTestEntity();
 		PrivateKey pk1 = OAuthUtils.loadPrivateKey(entity.getPrivateKey());
 		PrivateKey pk2 = OAuthUtils2.loadPrivateKey(entity.getPrivateKey());
@@ -48,7 +48,7 @@ public class OAuthUtilsTest {
 	}
 	
 	@Test
-	public void loadPublicKeys() throws GeneralSecurityException, IOException {
+	public void loadPublicKeys() throws Exception {
 		RSAKeyEntity entity = buildTestEntity();
 
 		
@@ -59,7 +59,7 @@ public class OAuthUtilsTest {
 	}
 	
 	@Test
-	public void testConversions() throws GeneralSecurityException, IOException, ParseException, JOSEException {
+	public void testConversions() throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		RSAKeyEntity entity = buildTestEntity();
 		String jwkJson = OAuthUtils2.getPublicKeyJson(entity);
@@ -69,7 +69,7 @@ public class OAuthUtilsTest {
 	}
 	
 	@Test
-	public void testCreateJWKPublicKey() throws GeneralSecurityException, IOException, ParseException, JOSEException {
+	public void testCreateJWKPublicKey() throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		RSAKeyEntity entity = buildTestEntity();
 		String jwkJson = OAuthUtils2.getPublicKeyJson(entity);
@@ -77,7 +77,7 @@ public class OAuthUtilsTest {
 		assert(json != null);
 	}
 	
-	private RSAKeyEntity buildTestEntity() throws NoSuchAlgorithmException, NoSuchProviderException {
+	private RSAKeyEntity buildTestEntity() throws Exception {
 		
 		return OAuthUtils2.buildKeyEntity("1");
 	}
