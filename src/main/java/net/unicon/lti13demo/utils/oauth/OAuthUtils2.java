@@ -148,7 +148,7 @@ public class OAuthUtils2 {
 	    	publicKey = publicKey.replace(PEM_PUBLIC_END, "");
 	    	publicKey = publicKey.replace(PEM_RSA_PUBLIC_START, "");
 	    	publicKey = publicKey.replace(PEM_RSA_PUBLIC_END, "");
-	    	return publicKey.replaceAll("\\s", "");
+	    	return publicKey.replaceAll("\n", "");
 	    }
 	    
 	    public static String cleanPrivateKey(String publicKey) {
