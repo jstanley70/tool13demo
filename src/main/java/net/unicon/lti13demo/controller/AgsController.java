@@ -16,6 +16,7 @@ package net.unicon.lti13demo.controller;
 
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import net.unicon.lti13demo.exceptions.ConnectionException;
 import net.unicon.lti13demo.model.LtiContextEntity;
 import net.unicon.lti13demo.model.PlatformDeployment;
+import net.unicon.lti13demo.model.ags.LineItemContainer;
 import net.unicon.lti13demo.model.ags.LineItems;
 import net.unicon.lti13demo.model.oauth2.Token;
 import net.unicon.lti13demo.repository.LtiContextRepository;
@@ -86,15 +88,15 @@ public class AgsController {
                 Token token = advantageAgsService.getReadLineItemToken(platformDeployment.get());
 
                 // 2. Call the service
-                LineItems lineItems = advantageAgsService.callLineItemService(token, context);
+                List<LineItemContainer> lineItemContainers = advantageAgsService.callContainerItemService(token, context);
 
                 // 3. update the model
-                model.addAttribute("results", lineItems.getLineItemList());
+                model.addAttribute("containers", lineItemContainers);
             }
         } else {
             model.addAttribute("noSessionValues", true);
         }
-        return "ltiAdvLineItemMain";
+        return "ltiAdvAgsMain";
     }
     
     @RequestMapping(value = AGS_LINEITEM_SCORE, method = RequestMethod.POST)

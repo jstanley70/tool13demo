@@ -176,7 +176,8 @@ public class LTIJWTService {
                     .setExpiration(DateUtils.addSeconds(date, 3600)) //a java.util.Date
                     .setNotBefore(date) //a java.util.Date
                     .setIssuedAt(date) // for example, now
-                    .claim("jti", platformDeployment.getDeploymentId())  //This is an specific claim to ask for tokens tokens.
+                    .setHeaderParam("kid", platformDeployment.getToolKid())
+                    .claim("jti", platformDeployment.getDeploymentId()) //This is an specific claim to ask for tokens tokens.
                     .signWith(SignatureAlgorithm.RS256, toolPrivateKey)  //We sign it with our own private key. The platform has the public one.
                     .compact();
             log.debug("Token Request: \n {} \n", state);

@@ -25,10 +25,41 @@
     <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
 </head>
 <body>
+
+<h4>CONTAINER ITEMS: </h4>
+<div th:if="${containers != null and !#lists.isEmpty(containers)}">
+    <h4>Line Item Containers for the course <span th:text="${#session.getAttribute('context_id')}"/></h4>
+    <table class="table table-striped">
+    <thead class="thead-dark">
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Label</th>
+        <th scope="col">Maximum Score</th>
+        <th scope="col">Resource Id</th>
+        <th scope="col">Tag</th>
+        <th scope="col">Resource Link Id</th>
+        <th scope="col">Lti Link Id</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="containerItem,rowStat : ${containers}">
+        <td scope="row" th:text="${rowStat.count}">1</td>
+        <td th:text="${containerItem.id}"></td>
+        <td th:text="${containerItem.label}"></td>
+        <td th:text="${containerItem.scoreMaximum}"></td>
+        <td th:text="${containerItem.resourceId}"></td>
+        <td th:text="${containerItem.tag}"></td>
+        <td th:text="${containerItem.resourceLinkId}"></td>
+        <td th:text="${containerItem.ltiLinkId}"></td>
+        
+    </tr>
+    </tbody>
+    </table>
+</div>
 <h4>GRADES: </h4>
 <p>&nbsp;</p>
 <div th:if="${noSessionValues}">
-    <p>To view the membership you need first to access to the tool with a lti13 link. In that way, we will have a value in the course and the deployment. </p>
+    <p>To view the grades and assignments you need first to access to the tool with a lti13 link. In that way, we will have a value in the course and the deployment. </p>
     <p>That is only the way we have secured this endpoint, because LTI Advantage allows you to access to the membership service without a session created. </p>
 </div>
 <div th:if="${results != null and !#lists.isEmpty(results)}">
@@ -65,18 +96,7 @@
 <div th:if="${results != null and #lists.isEmpty(results)}">
     <p>We are not receiving results for this context</p>
 </div>
-<p>&nbsp;</p>
-<form th:action="lineitems/score" method="POST">
-    <div class="form-group">
-        <label for="UserId">UserId:</label>
-        <input type="text" id="userId"  name="USER_ID"  th:value="" class="form-control"/>
-        <input type="text" id="score"  name="SCORE"  th:value="" class="form-control"/>
-        <input type="text" id="comment"  name="COMMENT"  th:value="" class="form-control"/>
-        <input type="text" id="userId"  name="ACTIVITY PROGRESS"  th:value="" class="form-control"/>
-        <input type="text" id="userId"  name="GRADING PROGRESS"  th:value="" class="form-control"/>
-    </div>
-    <input type="submit" value="Submit" class="btn btn-primary">
-</form>
+
 
 <h4>SESSION</h4>
 

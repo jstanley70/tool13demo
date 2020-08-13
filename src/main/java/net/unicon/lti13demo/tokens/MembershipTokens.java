@@ -15,6 +15,12 @@
 
 package net.unicon.lti13demo.tokens;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.http.MediaType;
+
 public class MembershipTokens {
     //ROLES MEMBERSHIP
     //TODO Each of these has several subroles. Maybe it is better just to keep in the contant the "prefix" and find the role with the suffix(es)
@@ -28,4 +34,13 @@ public class MembershipTokens {
     public static final String LTI_ROLE_MEMBERSHIP_OFFICER = "http://purl.imsglobal.org/vocab/lis/v2/membership#Officer";
     //MEMBERSHIP SCOPE
     public static final String LTI_MEMBERSHIP_SCOPE = "https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly";
+    public static final String LTI_MEMBERSHIP_MEDIA_TYPE_APPLICATION = "application/vnd.ims.lis.v2.membershipcontainer+json";
+    public static final String LTI_MEMBERSHIP_MEDIA_TYPE = "vnd.ims.lis.v2.membershipcontainer+json";
+    public static final String LTI_MEMBERSHIP_MEDIA_TYPE_NRPS = "application/vnd.ims.lti-nrps.v2.membershipcontainer+json";
+
+    public static final List<MediaType> getMembershipMediaTypes() {
+    	List<MediaType> supportedMediaTypes = new ArrayList<>();
+         supportedMediaTypes.add(new MediaType("application", LTI_MEMBERSHIP_MEDIA_TYPE, StandardCharsets.UTF_8));
+         return supportedMediaTypes;
+    }
 }

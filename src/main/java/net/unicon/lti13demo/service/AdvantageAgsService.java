@@ -15,7 +15,9 @@
 package net.unicon.lti13demo.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +29,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import net.unicon.lti13demo.exceptions.ConnectionException;
 import net.unicon.lti13demo.exceptions.helper.ExceptionMessageGenerator;
 import net.unicon.lti13demo.model.LtiContextEntity;
 import net.unicon.lti13demo.model.PlatformDeployment;
 import net.unicon.lti13demo.model.ags.LineItem;
+import net.unicon.lti13demo.model.ags.LineItemContainer;
 import net.unicon.lti13demo.model.ags.LineItems;
 import net.unicon.lti13demo.model.oauth2.Token;
 import net.unicon.lti13demo.tokens.AgsTokens;
+import net.unicon.lti13demo.utils.lti.ClientArrayUtils;
 
 
 /**
@@ -82,7 +89,12 @@ public class AdvantageAgsService {
         try {
             RestTemplate restTemplate = advantageConnectorHelper.createRestTemplate();
             //We add the token in the request with this.
-            HttpEntity request = advantageConnectorHelper.createTokenizedRequestEntity(token);
+            Map<String,String> headers = new HashMap<>();
+            headers.put("Accept", AgsTokens.AGS_LINE_ITEM_APPLICATION_MEDIA_TYPE);
+            headers.put("Content-Type", AgsTokens.AGS_LINE_ITEM_APPLICATION_MEDIA_TYPE);
+            //We add the token in the request with this.
+            HttpEntity request = advantageConnectorHelper.createTokenizedRequestEntity(token, headers);
+
             //The URL to get the lineItem contents is stored in the context (in our database) because it came
             // from the platform when we created the link to the context, and we saved it then.
             final String GET_LINEITEM = context.getLineitems();
@@ -127,6 +139,42 @@ public class AdvantageAgsService {
             throw new ConnectionException(exceptionMessageGenerator.exceptionMessage(exceptionMsg.toString(), e));
         }
         return lineItemUsers;
+    }
+    
+  //Calling the grade service and getting a paginated result of results.
+    public List<LineItemContainer> callContainerItemService(Token token, LtiContextEntity context) throws ConnectionException {
+        List<LineItemContainer> lineItemContainers = new ArrayList<>();
+        log.debug("Token -  "+ token.getAccess_token());
+        try {
+            RestTemplate restTemplate = advantageConnectorHelper.createRestTemplate();
+            //We add the token in the request with this.
+            Map<String,String> headers = new HashMap<>();
+            headers.put("Accept", AgsTokens.AGS_LINE_ITEM_APPLICATION_MEDIA_TYPE);
+            headers.put("Content-Type", AgsTokens.AGS_LINE_ITEM_APPLICATION_MEDIA_TYPE);
+            //We add the token in the request with this.
+            HttpEntity request = advantageConnectorHelper.createTokenizedRequestEntity(token, headers);
+
+            //The URL to get the lineItem contents is stored in the context (in our database) because it came
+            // from the platform when we created the link to the context, and we saved it then.
+            final String GET_LINEITEM = context.getLineitems();
+            log.debug("GET_LINEITEM -  "+ GET_LINEITEM);
+            List<Map<String, Object>> records = ClientArrayUtils.getAll(restTemplate, GET_LINEITEM, request, "100");
+
+			final ObjectMapper mapper = new ObjectMapper();
+			//mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+			for (Map<String, Object> record : records) {
+				LineItemContainer lineItemContainer = mapper.convertValue(record, LineItemContainer.class);
+				lineItemContainers.add(lineItemContainer);
+			}
+           
+        } catch (Exception e) {
+            StringBuilder exceptionMsg = new StringBuilder();
+            exceptionMsg.append("Failed to extract lineItemContainers");
+            log.error(exceptionMsg.toString(),e);
+            throw new ConnectionException(exceptionMessageGenerator.exceptionMessage(exceptionMsg.toString(), e));
+        }
+        return lineItemContainers;
     }
     
     //Calling the grade service and getting a paginated result of results.
@@ -183,6 +231,6 @@ public class AdvantageAgsService {
         return lineItemUsers;
     }
 
-
+    
 
 }

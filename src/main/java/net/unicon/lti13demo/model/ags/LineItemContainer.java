@@ -12,23 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.unicon.lti13demo.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+package net.unicon.lti13demo.model.ags;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-@NoArgsConstructor
-public class JWKPublicKey {
-	@JsonInclude(Include.NON_NULL)
-	String kty;
-	String n;
-	String e;
-	String kid;
-	String alg;
-	String use;
+public class LineItemContainer {
+	private String id;
+	private String label;
+	private String scoreMaximum;
+	private String resourceId;
+	private String tag;
+	private String resourceLinkId;
+	private String ltiLinkId;
 }
-

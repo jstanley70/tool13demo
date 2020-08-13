@@ -15,16 +15,34 @@
 
 package net.unicon.lti13demo.tokens;
 
-public class AgsTokens {
-    
-    public static final String AGS_SCOPE_LINE_ITEM = "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem";
-    public static final String AGS_SCOPE_RESULT_READ_ONLY = "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly";
-    public static final String AGS_SCOPE_SCORE = "https://purl.imsglobal.org/spec/lti-ags/scope/score";
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
-    public static final String AGS_LINE_ITEM = "lineitem";
-    public static final String AGS_LINE_ITEMS = "lineitems";
-    public static final String AGS_LINK_ID_FILTER = "resource_link_id";
-    public static final String AGS_RESOURCE_ID_FILTER = "resource_id";
-    public static final String AGS_TAG_FILTER = "tag";
-    public static final String AGS_LIMIT_FILTER = "limit";
+import org.springframework.http.MediaType;
+
+public class AgsTokens {
+
+	public static final String AGS_SCOPE_LINE_ITEM = "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem";
+	public static final String AGS_SCOPE_LINE_ITEM_READ_ONLY = "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly";
+	public static final String AGS_SCOPE_RESULT_READ_ONLY = "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly";
+	public static final String AGS_SCOPE_SCORE = "https://purl.imsglobal.org/spec/lti-ags/scope/score";
+
+	public static final String AGS_LINE_ITEM = "lineitem";
+	public static final String AGS_LINE_ITEMS = "lineitems";
+	public static final String AGS_LINK_ID_FILTER = "resource_link_id";
+	public static final String AGS_RESOURCE_ID_FILTER = "resource_id";
+	public static final String AGS_TAG_FILTER = "tag";
+	public static final String AGS_LIMIT_FILTER = "limit";
+
+	public static final String AGS_LINE_ITEM_APPLICATION_MEDIA_TYPE = "application/vnd.ims.lis.v2.lineitemcontainer+json";
+	public static final String AGS_LINE_ITEM_MEDIA_TYPE = "vnd.ims.lis.v2.lineitemcontainer+json";
+	public static final String AGS_LINE_ITEM_MEDIA_TYPE_JSON_LD = "http://purl.imsglobal.org/ctx/lis/v2/outcomes/LineItemContainer";
+	public static final String AGS_LINE_ITEM_MEDIA_TYPE_RDF_TYPE = "http://purl.imsglobal.org/vocab/lis/v2/outcomes#LineItemContainer";
+
+	public static final List<MediaType> getAgsMediaTypes() {
+		List<MediaType> supportedMediaTypes = new ArrayList<>();
+		supportedMediaTypes.add(new MediaType("application", AgsTokens.AGS_LINE_ITEM_MEDIA_TYPE, StandardCharsets.UTF_8));
+		return supportedMediaTypes;
+	}
 }
